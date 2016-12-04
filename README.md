@@ -14,6 +14,8 @@ During registration, client generates RSA 4096 bit key pair, public key gets sen
 ##### Pre-Keys
 During registration client generates large bulk of ECDH key pairs, and public portion of these keys gets sent to server during registration, all private keys remains at client
 
+### Encryption
+It uses 256 bit AES encryption
 
 ### Protocol
 
@@ -37,7 +39,7 @@ During registration client generates large bulk of ECDH key pairs, and public po
 
  - Bob generates random salt
 
- - Bob uses computed secret, salt as input to AES to encrypt his message for Alice
+ - Bob uses computed secret, salt as input to AES (256 bit) to encrypt his message for Alice
 
  - Bob uses Alice's public identity key to encrypt Bob's ECDH public pre-key, salt and Alice's public ECDH pre-key
 
