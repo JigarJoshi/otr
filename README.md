@@ -37,15 +37,15 @@ It uses 256 bit AES encryption
 
  - Bob generates ECDH key pair and using Alice's ECDH public pre-key derives secret
 
- - Bob generates random salt
+ - Bob generates random salt and IV
 
- - Bob uses computed secret, salt as input to AES (256 bit) to encrypt his message for Alice
+ - Bob uses computed secret, salt and IV as input to AES (256 bit) to encrypt his message for Alice
 
  - Bob uses Alice's public identity key to encrypt Bob's ECDH public pre-key, salt and Alice's public ECDH pre-key
 
  - Bob signs salt with his private key
 
- - Bob sends server Alice's userId, encrypted message, encrypted salt, encrypted Alice's public ECDH pre-key, encrypted Bob's public ECDH pre-key and signed salt
+ - Bob sends server Alice's userId, encrypted message, encrypted salt, signed salt, encrypted IV, encrypted Alice's public ECDH pre-key, encrypted Bob's public ECDH pre-key and signed salt
 
  - server simply stores all these information
 
@@ -55,7 +55,7 @@ It uses 256 bit AES encryption
 
  - Server provides encrypted data which was submitted by Bob
 
- - Alice uses her private key to decrypt Alice's ECDH public pre-key, Bob's ECDH public key, salt
+ - Alice uses her private key to decrypt Alice's ECDH public pre-key, Bob's ECDH public key, salt and IV
 
  - Alice verifies signedSalt with Bob's public key
 
