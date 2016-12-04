@@ -27,6 +27,7 @@ public class MessageHelper {
 	private String message;
 	private String salt;
 	private String signedSalt;
+	private String iv;
 
 	private String messageMetadata;
 	private String partialMessageKey;
@@ -108,6 +109,14 @@ public class MessageHelper {
 		this.signedSalt = signedSalt;
 	}
 
+	public String getIv() {
+		return iv;
+	}
+
+	public void setIv(String iv) {
+		this.iv = iv;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -120,6 +129,7 @@ public class MessageHelper {
 		if (message != null ? !message.equals(that.message) : that.message != null) return false;
 		if (salt != null ? !salt.equals(that.salt) : that.salt != null) return false;
 		if (signedSalt != null ? !signedSalt.equals(that.signedSalt) : that.signedSalt != null) return false;
+		if (iv != null ? !iv.equals(that.iv) : that.iv != null) return false;
 		if (messageMetadata != null ? !messageMetadata.equals(that.messageMetadata) : that.messageMetadata != null)
 			return false;
 		if (partialMessageKey != null ? !partialMessageKey.equals(that.partialMessageKey) : that.partialMessageKey != null)
@@ -135,6 +145,7 @@ public class MessageHelper {
 		int result = message != null ? message.hashCode() : 0;
 		result = 31 * result + (salt != null ? salt.hashCode() : 0);
 		result = 31 * result + (signedSalt != null ? signedSalt.hashCode() : 0);
+		result = 31 * result + (iv != null ? iv.hashCode() : 0);
 		result = 31 * result + (messageMetadata != null ? messageMetadata.hashCode() : 0);
 		result = 31 * result + (partialMessageKey != null ? partialMessageKey.hashCode() : 0);
 		result = 31 * result + (originalPublicKey != null ? originalPublicKey.hashCode() : 0);

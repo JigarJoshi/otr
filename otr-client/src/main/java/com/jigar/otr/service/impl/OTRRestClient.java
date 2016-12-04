@@ -24,6 +24,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -196,6 +197,7 @@ public class OTRRestClient implements OTRClient {
 				String originalPublicKey = RSA.decrypt(messages.getJSONObject(i).getString("originalPublicKey"), privateKey);
 				String plainSalt = RSA.decrypt(messages.getJSONObject(i).getString("salt"), privateKey);
 				String signedSalt = messages.getJSONObject(i).getString("signedSalt");
+				String ivStr = RSA.decrypt(messages.getJSONObject(i).getString("iv"), privateKey);
 
 				int sendersUserId = Integer.parseInt(messages.getJSONObject(i).getString("fromUserId"));
 				String sendersPublicId = getPublicIdKey(sendersUserId);
@@ -212,7 +214,8 @@ public class OTRRestClient implements OTRClient {
 				String derivedSecret = ECDH.generateSecret(storerWrapper.getPrivatePreKey(originalPublicKey), othersPublicKeyString);
 				encryptedMessage = messages.getJSONObject(i).getString("message");
 				// decrypt message
-				String plainTextMessage = new AES(derivedSecret, plainSalt).decrypt(encryptedMessage);
+				byte[] iv = Base64.getDecoder().decode(ivStr);
+				String plainTextMessage = new AES(derivedSecret, plainSalt, iv).decrypt(encryptedMessage);
 				log.info("received message is {}", plainTextMessage);
 			} catch (Exception ex) {
 				log.warn("Failed to read message", ex);
@@ -240,15 +243,17 @@ public class OTRRestClient implements OTRClient {
 			String secret = ECDH.generateSecret(sendersPrivatePreKey, recipientPublicPreKey);
 
 			String salt = Utils.generateRandomSalt();
+			byte[] iv = Utils.generateRandomIV();
 			PrivateKey sendersPrivateIdKey = RSA.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
 			String signedSalt = RSA.sign(salt, sendersPrivateIdKey);
 
 			// encrypt message
-			String encryptedMessage = new AES(secret, salt).encrypt(message);
+			String encryptedMessage = new AES(secret, salt, iv).encrypt(message);
 
 			// encrypt DH public key using other party's public key
 			String encryptedSendersPublicPreKey = RSA.encrypt(sendersPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
 			String encryptedRecipientPublicPreKey = RSA.encrypt(recipientPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
+			String encryptedIV = RSA.encrypt(Base64.getEncoder().encodeToString(iv), RSA.getPublicKeyFromString(reciepientsPublicIdKey));
 
 			String encryptedSalt = RSA.encrypt(salt, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
 			// send it to server
@@ -258,6 +263,7 @@ public class OTRRestClient implements OTRClient {
 					.param("message", encryptedMessage)
 					.param("salt", encryptedSalt)
 					.param("signedSalt", signedSalt)
+					.param("iv", encryptedIV)
 					.param("messageMetadata", "{\"type\":\"text\"}")
 					.param("recipientPublicPreKey", encryptedRecipientPublicPreKey)
 					.param("sendersPublicPreKey", encryptedSendersPublicPreKey).asString().getStatusCode());

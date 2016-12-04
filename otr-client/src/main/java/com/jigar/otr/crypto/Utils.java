@@ -27,4 +27,10 @@ public class Utils {
 	public static String generateRandomSalt() {
 		return new BigInteger(130, new SecureRandom()).toString(32);
 	}
+
+	public static byte[] generateRandomIV() {
+		byte[] iv = new byte[16];
+		new SecureRandom().nextBytes(iv);
+		return iv;
+	}
 }

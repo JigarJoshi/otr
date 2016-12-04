@@ -25,7 +25,7 @@ import com.jigar.otr.helper.MessageHelper;
  * Created by jigar.joshi on 11/7/16.
  */
 public interface MessageService {
-	void sendMessage(long fromUserId, long toUserId, String message, String salt, String signedSalt,
+	void sendMessage(long fromUserId, long toUserId, String message, String salt, String signedSalt, String iv,
 			String messageMetadata, String partialKey, String originalPublicKey) throws MessageException;
 
 	List<MessageHelper> receiveMessage(long userId) throws MessageException;

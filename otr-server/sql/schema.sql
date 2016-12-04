@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.7.16, for osx10.11 (x86_64)
 --
--- Host: localhost    Database: otr
+-- Host: localhost    Database: test
 -- ------------------------------------------------------
 -- Server version	5.7.16
 
@@ -29,6 +29,7 @@ CREATE TABLE `messages` (
   `message` blob NOT NULL,
   `salt` blob NOT NULL,
   `signed_salt` blob NOT NULL,
+  `iv` blob NOT NULL,
   `message_metadata` blob NOT NULL,
   `senders_public_pre_key` blob,
   `recipient_public_pre_key` blob NOT NULL,
@@ -37,7 +38,7 @@ CREATE TABLE `messages` (
   PRIMARY KEY (`id`),
   KEY `idx_messages_from_user_id` (`from_user_id`),
   KEY `idx_messages_to_user_id` (`to_user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -55,7 +56,7 @@ CREATE TABLE `pre_keys` (
   `update_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_pre_keys_user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -75,7 +76,7 @@ CREATE TABLE `users` (
   `update_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`,`login`),
   UNIQUE KEY `idx_users_login` (`login`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -87,4 +88,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-12-04 12:55:35
+-- Dump completed on 2016-12-04 14:54:03

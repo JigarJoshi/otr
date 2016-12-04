@@ -42,29 +42,30 @@ public class MessageServiceImpl implements MessageService {
 	}
 
 	@Override
-	public void sendMessage(long fromUserId, long toUserId, String message, String salt, String signedSalt,
+	public void sendMessage(long fromUserId, long toUserId, String message, String salt, String signedSalt, String iv,
 			String messageMetadata, String sendersPublicPreKey, String recipientPublicPreKey) throws MessageException {
 		Connection connection = null;
 		PreparedStatement insert = null;
 		try {
 			connection = database.getConnection();
 			insert = connection.prepareStatement("INSERT INTO MESSAGES (from_user_id, to_user_id, message, salt," +
-					" signed_salt, message_metadata, senders_public_pre_key, recipient_public_pre_key, sent_time) VALUES  " +
-					"(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					" signed_salt, iv, message_metadata, senders_public_pre_key, recipient_public_pre_key, sent_time) VALUES  " +
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			insert.setLong(1, fromUserId);
 			insert.setLong(2, toUserId);
 
 			insert.setBytes(3, message.getBytes());
 			insert.setBytes(4, salt.getBytes());
 			insert.setBytes(5, signedSalt.getBytes());
+			insert.setBytes(6, iv.getBytes());
 
 
-			insert.setBytes(6, messageMetadata.getBytes());
+			insert.setBytes(7, messageMetadata.getBytes());
 
-			insert.setString(7, sendersPublicPreKey);
-			insert.setString(8, recipientPublicPreKey);
+			insert.setString(8, sendersPublicPreKey);
+			insert.setString(9, recipientPublicPreKey);
 
-			insert.setDate(9, new java.sql.Date(System.currentTimeMillis()));
+			insert.setDate(10, new java.sql.Date(System.currentTimeMillis()));
 
 			insert.executeUpdate();
 		} catch (SQLException sqlException) {
@@ -92,6 +93,7 @@ public class MessageServiceImpl implements MessageService {
 				String message = resultSet.getString("message");
 				String salt = resultSet.getString("salt");
 				String signedSalt = resultSet.getString("signed_salt");
+				String iv = resultSet.getString("iv");
 
 				String messageMetaData = resultSet.getString("message_metadata");
 				long fromUserId = resultSet.getLong("from_user_id");
@@ -105,6 +107,8 @@ public class MessageServiceImpl implements MessageService {
 				messageHelper.setMessage(message);
 				messageHelper.setSalt(salt);
 				messageHelper.setSignedSalt(signedSalt);
+				messageHelper.setIv(iv);
+
 				messageHelper.setMessageMetadata(messageMetaData);
 				messageHelper.setSentTime(sentTime);
 				messageHelper.setToUserId(toUserId);

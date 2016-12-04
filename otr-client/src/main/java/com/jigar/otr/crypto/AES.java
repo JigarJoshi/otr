@@ -40,13 +40,14 @@ import javax.crypto.spec.SecretKeySpec;
 public class AES {
 	private final SecretKey secretKey;
 	private final Cipher cipher;
-	private final byte[] iv = { 1, 3, 4, 6, 8, 9, 10, 11, 19, 20, 21, 0, 4, 8, 1, 100 };
+	private final byte[] iv;
 
-	public AES(String secret, String secretSalt) throws Exception {
+	public AES(String secret, String secretSalt, byte[] iv) throws Exception {
 		try {
 			final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 			final KeySpec spec = new PBEKeySpec(secret.toCharArray(), secretSalt.getBytes("UTF-8"), 65536, 256);
 			final SecretKey tmp = factory.generateSecret(spec);
+			this.iv = iv;
 			secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
 		} catch (NoSuchAlgorithmException e) {
 			throw new Exception("Cannot get an instance of secret key factory", e);

@@ -55,11 +55,12 @@ public class MessageEndpoint {
 			@FormParam("message") @Nullable String message,
 			@FormParam("salt") @Nullable String salt,
 			@FormParam("signedSalt") @Nullable String signedSalt,
+			@FormParam("iv") @Nullable String iv,
 			@FormParam("messageMetadata") @Nullable String messageMetadata,
 			@FormParam("sendersPublicPreKey") @Nullable String sendersPublicPreKey,
 			@FormParam("recipientPublicPreKey") @Nullable String recipientPublicPreKEy) {
 		try {
-			messageService.sendMessage(fromUserId, toUserId, message, salt, signedSalt, messageMetadata, sendersPublicPreKey, recipientPublicPreKEy);
+			messageService.sendMessage(fromUserId, toUserId, message, salt, signedSalt, iv, messageMetadata, sendersPublicPreKey, recipientPublicPreKEy);
 			return Response.status(OK).entity("Message sent successfully").type(MediaType.APPLICATION_JSON_TYPE).build();
 		} catch (MessageException messageException) {
 			log.error("Failed to send message : " + messageException.getMessage(), messageException);
