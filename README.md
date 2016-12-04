@@ -18,68 +18,69 @@ During registration client generates large bulk of ECDH key pairs, and public po
 ### Protocol
 
 ##### registration
-User provides `login`, `password`, `public identity key`, `set of public pre-keys`, user gets user identification number back upon successful registration, which is stored
+
+ - User provides `login`, `password`, `public identity key`, `set of public pre-keys`, user gets user identification number back upon successful registration, which is stored
 
 ##### login
-User provides `login`, `password` and `signedLogin` (signed login with private identity key), upon login server provides `userId` (user identification number) which client stores it
+
+ - User provides `login`, `password` and `signedLogin` (signed login with private identity key), upon login server provides `userId` (user identification number) which client stores it
 
 ##### send message
-Bob wants to send message to Alice, Both user needs to have registered in system already, Bob will request Alice's public identity key & Alice's one of the public pre-key from server server
 
-Server will give public identity key and one of the public pre-key of Alice to Bob
+ - Bob wants to send message to Alice, Both user needs to have registered in system already, Bob will request Alice's public identity key & Alice's one of the public pre-key from server server
 
-Server will remove supplied public pre-key, if there is only one last public pre-key left on server, server will keep it until client comes back and replenishes them
+ - Server will give public identity key and one of the public pre-key of Alice to Bob
 
-Bob generates ECDH key pair and using Alice's ECDH public pre-key derives secret
+ - Server will remove supplied public pre-key, if there is only one last public pre-key left on server, server will keep it until client comes back and replenishes them
 
-Bob generates random salt
+ - Bob generates ECDH key pair and using Alice's ECDH public pre-key derives secret
 
-Bob uses computed secret, salt as input to AES to encrypt his message for Alice
+ - Bob generates random salt
 
-Bob uses Alice's public identity key to encrypt Bob's ECDH public pre-key, salt and Alice's public ECDH pre-key
+ - Bob uses computed secret, salt as input to AES to encrypt his message for Alice
 
-Bob signs salt with his private key
+ - Bob uses Alice's public identity key to encrypt Bob's ECDH public pre-key, salt and Alice's public ECDH pre-key
 
-Bob sends server Alice's userId, encrypted message, encrypted salt, encrypted Alice's public ECDH pre-key, encrypted Bob's public ECDH pre-key and signed salt
+ - Bob signs salt with his private key
 
-server simply stores all these information
+ - Bob sends server Alice's userId, encrypted message, encrypted salt, encrypted Alice's public ECDH pre-key, encrypted Bob's public ECDH pre-key and signed salt
+
+ - server simply stores all these information
 
 ##### receive message
 
-Alice requests for her message to server by providing her userId, server validates if Alice is logged in
+ - Alice requests for her message to server by providing her userId, server validates if Alice is logged in
 
-Server provides encrypted data which was submitted by Bob
+ - Server provides encrypted data which was submitted by Bob
 
-Alice uses her private key to decrypt Alice's ECDH public pre-key, Bob's ECDH public key, salt
+ - Alice uses her private key to decrypt Alice's ECDH public pre-key, Bob's ECDH public key, salt
 
-Alice verifies signedSalt with Bob's public key
+ - Alice verifies signedSalt with Bob's public key
 
-Alice checks Bob's identity finger print and makes sure, Bob is really the one who Alice thinks by making sure his identity by going out of band
+ - Alice checks Bob's identity finger print and makes sure, Bob is really the one who Alice thinks by making sure his identity by going out of band
 
-Alice then uses her ECDH private key, Bob's ECDH public key to compute secret and uses AES to decrypt message
+ - Alice then uses her ECDH private key, Bob's ECDH public key to compute secret and uses AES to decrypt message
 
 ##### replenishing pre-keys
 
-Client maintains N number of pre-keys on server and periodically replenishes them
+ - Client maintains N number of pre-keys on server and periodically replenishes them
 
 
 ### Data storage [TODO]
 
-To store backup of Bob and Alice's chat
+ - To store backup of Bob and Alice's chat
 
-Alice and Bob both are asked if you want to store messages, if both agrees to continue then client proceeds with backup
+ - Alice and Bob both are asked if you want to store messages, if both agrees to continue then client proceeds with backup
 
-To backup Alice's client generates a secure random key and encrypts with Bob's public key & Alice's public key and sends it to server [2 keys]
+ - To backup Alice's client generates a secure random key and encrypts with Bob's public key & Alice's public key and sends it to server [2 keys]
 
-Bob's client does the same
+ - Bob's client does the same
 
-Server once receives both the encrypted keys, generates a random salt and keeps on the record and provides that random salt to Bob and Alice on their next ping to server in encrypted form via their public identity keys
+ - Server once receives both the encrypted keys, generates a random salt and keeps on the record and provides that random salt to Bob and Alice on their next ping to server in encrypted form via their public identity keys
 
-Bob and Alice gets the secret key for their chat storage through server and decrypts with their private key
+ - Bob and Alice gets the secret key for their chat storage through server and decrypts with their private key and combines them to derive secret key that only Alice and Bob knows and then sends data back to server
 
-and combines them to derive secret key that only Alice and Bob knows and then sends data back to server
-
-these keys must remain present to client at all times protected by a master password which remains in the mind of user for backup and retrieval purpose
+ - These keys must remain present to client at all times protected by a master password which remains in the mind of user for backup and retrieval purpose
 
 
 
