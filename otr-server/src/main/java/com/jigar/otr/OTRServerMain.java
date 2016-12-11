@@ -62,7 +62,7 @@ public class OTRServerMain {
 		Database db = new DatabaseServiceImpl(config);
 		MessageService messageService = new MessageServiceImpl(db);
 		CryptoService cryptoService = new CryptoServiceImpl(db);
-		UserService userService = new SQLUserService(db);
+		UserService userService = new SQLUserService(db, config);
 
 		Server server = new Server(config.getInt("webserver.port", 4567));
 		HandlerList handlers = new HandlerList();

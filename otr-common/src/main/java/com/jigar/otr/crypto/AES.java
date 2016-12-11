@@ -16,6 +16,8 @@
 
 package com.jigar.otr.crypto;
 
+import com.lithium.flow.config.Config;
+
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -42,13 +44,19 @@ public class AES {
 	private final Cipher cipher;
 	private final byte[] iv;
 
-	public AES(String secret, String secretSalt, byte[] iv) throws Exception {
+	public AES(String secret, String secretSalt, byte[] iv, Config config) throws Exception {
 		try {
-			final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			final KeySpec spec = new PBEKeySpec(secret.toCharArray(), secretSalt.getBytes("UTF-8"), 65536, 256);
+			final String keyGenAlgorithm = config.getString("aes.keygen.algorithm", "PBKDF2WithHmacSHA1");
+			final int iterations = config.getInt("aes.key.iterations", 65536);
+			final int keyStrength = config.getInt("aes.key.length", 256);
+			final String transformation = config.getString("aes.cipher.transformation", "AES/CBC/PKCS5Padding");
+			final SecretKeyFactory factory = SecretKeyFactory.getInstance(keyGenAlgorithm);
+			final KeySpec spec = new PBEKeySpec(secret.toCharArray(), secretSalt.getBytes("UTF-8"), iterations, keyStrength);
 			final SecretKey tmp = factory.generateSecret(spec);
+
 			this.iv = iv;
-			secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+			this.secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+			this.cipher = Cipher.getInstance(transformation);
 		} catch (NoSuchAlgorithmException e) {
 			throw new Exception("Cannot get an instance of secret key factory", e);
 		} catch (UnsupportedEncodingException e) {
@@ -56,41 +64,27 @@ public class AES {
 		} catch (InvalidKeySpecException e) {
 			throw new Exception("invalid secret key", e);
 		}
-
-		try {
-			cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-			throw new Exception("Error getting a cipher instance for encryption", e);
-		}
 	}
 
 	public final String encrypt(String plaintext) throws Exception {
 
 		try {
 			cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-			throw new Exception("invalid secret key", e);
-		}
-		try {
 			final byte[] cipherTextBytes = cipher.doFinal(plaintext.getBytes());
 			return Base64.getEncoder().encodeToString(cipherTextBytes);
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			throw new Exception("Error encrypting base 64 format for the key", e);
+			throw new Exception("Error encrypting", e);
 		}
 	}
 
 	public final String decrypt(String cipherText) throws Exception {
 		try {
 			cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-			throw new Exception("invalid secret key", e);
-		}
-		try {
 			final byte[] decodedCipherText = Base64.getDecoder().decode(cipherText);
 			final byte[] plainTextBytes = cipher.doFinal(decodedCipherText);
 			return new String(plainTextBytes);
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			throw new Exception("Error decrypting base 64 format for the key", e);
+			throw new Exception("Error decrypting", e);
 		}
 	}
 }

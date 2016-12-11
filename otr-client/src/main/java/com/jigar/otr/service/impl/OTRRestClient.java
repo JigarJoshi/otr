@@ -56,9 +56,11 @@ public class OTRRestClient implements OTRClient {
 	private final KeyService keyService;
 	private final Storer storer;
 	private final StorerWrapper storerWrapper;
+	private final ECDH ecdh;
+	private final RSA rsa;
+	private static OTRClient INSTANCE;
 	private final static Logger log = LoggerFactory.getLogger(OTRRestClient.class);
 
-	private static OTRClient INSTANCE;
 
 	private OTRRestClient(Config config) {
 		String serverUrl = config.getString("server.url");
@@ -68,6 +70,8 @@ public class OTRRestClient implements OTRClient {
 		CookieHandler.setDefault(cookieManager);
 
 		this.webb.setBaseUri(serverUrl);
+		this.ecdh = new ECDH(config);
+		this.rsa = new RSA(config);
 		this.keyService = KeyService.get(config);
 		this.storer = Storer.get(config);
 		this.storerWrapper = StorerWrapper.get(config);
@@ -97,8 +101,8 @@ public class OTRRestClient implements OTRClient {
 
 		// generate identity-key
 		KeyPair identityKey = keyService.generateClientIdentityKeyPair();
-		String publicKeyString = RSA.getKeyAsString(identityKey.getPublic());
-		String privateKeyString = RSA.getKeyAsString(identityKey.getPrivate());
+		String publicKeyString = rsa.getKeyAsString(identityKey.getPublic());
+		String privateKeyString = rsa.getKeyAsString(identityKey.getPrivate());
 
 		JsonObject idKeyJSON = new JsonObject();
 		idKeyJSON.addProperty("private", privateKeyString);
@@ -126,8 +130,8 @@ public class OTRRestClient implements OTRClient {
 	public void login(String login, String password) throws OTRException {
 		String signedLogin;
 		try {
-			PrivateKey privateKey = RSA.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
-			signedLogin = RSA.sign(login, privateKey);
+			PrivateKey privateKey = rsa.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
+			signedLogin = rsa.sign(login, privateKey);
 		} catch (Exception ex) {
 			throw new OTRException("Failed to sign during logging", ex);
 		}
@@ -192,30 +196,30 @@ public class OTRRestClient implements OTRClient {
 		for (int i = 0; i < messages.length(); i++) {
 			String encryptedMessage;
 			try {
-				PrivateKey privateKey = RSA.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
-				String othersPublicKeyString = RSA.decrypt(messages.getJSONObject(i).getString("partialMessageKey"), privateKey);
-				String originalPublicKey = RSA.decrypt(messages.getJSONObject(i).getString("originalPublicKey"), privateKey);
-				String plainSalt = RSA.decrypt(messages.getJSONObject(i).getString("salt"), privateKey);
+				PrivateKey privateKey = rsa.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
+				String othersPublicKeyString = rsa.decrypt(messages.getJSONObject(i).getString("partialMessageKey"), privateKey);
+				String originalPublicKey = rsa.decrypt(messages.getJSONObject(i).getString("originalPublicKey"), privateKey);
+				String plainSalt = rsa.decrypt(messages.getJSONObject(i).getString("salt"), privateKey);
 				String signedSalt = messages.getJSONObject(i).getString("signedSalt");
-				String ivStr = RSA.decrypt(messages.getJSONObject(i).getString("iv"), privateKey);
+				String ivStr = rsa.decrypt(messages.getJSONObject(i).getString("iv"), privateKey);
 
 				int sendersUserId = Integer.parseInt(messages.getJSONObject(i).getString("fromUserId"));
 				String sendersPublicId = getPublicIdKey(sendersUserId);
 				PublicKey sendersPublicIdKey = RSA.getPublicKeyFromString(sendersPublicId);
 				// verify signature
-				if (!RSA.verifySignature(signedSalt, plainSalt, sendersPublicIdKey)) {
+				if (!rsa.verifySignature(signedSalt, plainSalt, sendersPublicIdKey)) {
 					log.warn("message from user {} is possible attack", sendersUserId);
 					throw new OTRException("Signature mismatch - possible attack");
 				}
 
-				log.info("sender's identity fingerprint {}", RSA.prettyFingerPrint(sendersPublicIdKey));
+				log.info("sender's identity fingerprint {}", rsa.prettyFingerPrint(sendersPublicIdKey));
 
 				// complete DH using public key of other party and derive secret
-				String derivedSecret = ECDH.generateSecret(storerWrapper.getPrivatePreKey(originalPublicKey), othersPublicKeyString);
+				String derivedSecret = ecdh.generateSecret(storerWrapper.getPrivatePreKey(originalPublicKey), othersPublicKeyString);
 				encryptedMessage = messages.getJSONObject(i).getString("message");
 				// decrypt message
 				byte[] iv = Base64.getDecoder().decode(ivStr);
-				String plainTextMessage = new AES(derivedSecret, plainSalt, iv).decrypt(encryptedMessage);
+				String plainTextMessage = new AES(derivedSecret, plainSalt, iv, config).decrypt(encryptedMessage);
 				log.info("received message is {}", plainTextMessage);
 			} catch (Exception ex) {
 				log.warn("Failed to read message", ex);
@@ -235,27 +239,27 @@ public class OTRRestClient implements OTRClient {
 			log.info("received target users's one-time pre-public key {}", recipientPublicPreKey);
 
 			// generate key pair
-			KeyPair myKeys = ECDH.generateKeyPair();
+			KeyPair myKeys = ecdh.generateKeyPair();
 			String sendersPublicPreKey = ECDH.publicKeyToString(myKeys.getPublic());
 			String sendersPrivatePreKey = ECDH.privateKeyToString(myKeys.getPrivate());
 
 			// generate shared secret
-			String secret = ECDH.generateSecret(sendersPrivatePreKey, recipientPublicPreKey);
+			String secret = ecdh.generateSecret(sendersPrivatePreKey, recipientPublicPreKey);
 
 			String salt = Utils.generateRandomSalt();
 			byte[] iv = Utils.generateRandomIV();
-			PrivateKey sendersPrivateIdKey = RSA.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
-			String signedSalt = RSA.sign(salt, sendersPrivateIdKey);
+			PrivateKey sendersPrivateIdKey = rsa.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
+			String signedSalt = rsa.sign(salt, sendersPrivateIdKey);
 
 			// encrypt message
-			String encryptedMessage = new AES(secret, salt, iv).encrypt(message);
+			String encryptedMessage = new AES(secret, salt, iv, config).encrypt(message);
 
 			// encrypt DH public key using other party's public key
-			String encryptedSendersPublicPreKey = RSA.encrypt(sendersPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
-			String encryptedRecipientPublicPreKey = RSA.encrypt(recipientPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
-			String encryptedIV = RSA.encrypt(Base64.getEncoder().encodeToString(iv), RSA.getPublicKeyFromString(reciepientsPublicIdKey));
+			String encryptedSendersPublicPreKey = rsa.encrypt(sendersPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
+			String encryptedRecipientPublicPreKey = rsa.encrypt(recipientPublicPreKey, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
+			String encryptedIV = rsa.encrypt(Base64.getEncoder().encodeToString(iv), RSA.getPublicKeyFromString(reciepientsPublicIdKey));
 
-			String encryptedSalt = RSA.encrypt(salt, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
+			String encryptedSalt = rsa.encrypt(salt, RSA.getPublicKeyFromString(reciepientsPublicIdKey));
 			// send it to server
 			log.info("sent status = {}", webb.post("/api/message/send")
 					.param("fromUserId", storerWrapper.getUserId())

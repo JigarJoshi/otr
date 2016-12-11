@@ -37,9 +37,13 @@ import com.jigar.otr.service.KeyService;
  */
 public class KeyServiceImpl implements KeyService {
 	private final Config config;
+	private ECDH ecdh;
+	private RSA rsa;
 
 	public KeyServiceImpl(Config config) {
 		this.config = config;
+		this.ecdh = new ECDH(config);
+		this.rsa = new RSA(config);
 	}
 
 	@Override
@@ -49,7 +53,7 @@ public class KeyServiceImpl implements KeyService {
 		Random random = new Random();
 		try {
 			while (result.size() <= numberOfKeys) {
-				KeyPair keyPair = ECDH.generateKeyPair();
+				KeyPair keyPair = ecdh.generateKeyPair();
 				if (trustPlatform || random.nextBoolean()) {
 					result.add(keyPair);
 				}
@@ -64,7 +68,7 @@ public class KeyServiceImpl implements KeyService {
 	@Override
 	public KeyPair generateClientIdentityKeyPair() throws OTRException {
 		try {
-			return RSA.generateKey(config.getInt("keys.identity.keySize", 4096));
+			return rsa.generateKey(config.getInt("keys.identity.keySize", 4096));
 		} catch (NoSuchAlgorithmException ex) {
 			throw new OTRException("Failed to generate client identity keypair", ex);
 		}

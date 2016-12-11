@@ -16,6 +16,8 @@
 
 package com.jigar.otr.crypto;
 
+import com.lithium.flow.config.Config;
+
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -39,17 +41,22 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  * Created by jigar.joshi on 11/20/16.
  */
 public class RSA {
-	private static final String ALGORITHM = "RSA";
-	private static final String SIGNATUER_ALGORITHM = "MD5WithRSA";
-	private static final String ENCRYPTION_ALGORITHM = "RSA/ECB/PKCS1Padding";
-	private static final String FINGERPRINT_HASH_ALGORITHM = "MD5";
+	private final String rsaCipher;
+	private final String fingerprintHashAlgorithm;
+	private final String signatureAlgorithm;
+
 	private static final String UTF8 = "UTF8";
+	private static final String ALGORITHM = "RSA";
 
 	static {
 		init();
 	}
 
-	private RSA() {
+
+	public RSA(Config config) {
+		this.fingerprintHashAlgorithm = config.getString("RSA.fingerprint.hashAlgorithm", "SHA1");
+		this.signatureAlgorithm = config.getString("RSA.signature.algorithm", "MD5WithRSA");
+		this.rsaCipher = config.getString("RSA.cipher", "RSA/ECB/PKCS1Padding");
 	}
 
 	private static void init() {
@@ -57,29 +64,29 @@ public class RSA {
 	}
 
 
-	public static KeyPair generateKey(int keySizeInBytes) throws NoSuchAlgorithmException {
+	public KeyPair generateKey(int keySizeInBytes) throws NoSuchAlgorithmException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
 		keyGen.initialize(keySizeInBytes);
 		return keyGen.generateKeyPair();
 	}
 
-	private static byte[] encrypt(byte[] text, PublicKey key) throws Exception {
+	private byte[] encrypt(byte[] text, PublicKey key) throws Exception {
 		byte[] cipherText;
-		Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+		Cipher cipher = Cipher.getInstance(rsaCipher);
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		cipherText = cipher.doFinal(text);
 		return cipherText;
 	}
 
-	public static String encrypt(String text, PublicKey key) throws Exception {
+	public String encrypt(String text, PublicKey key) throws Exception {
 		String encryptedText;
 		byte[] cipherText = encrypt(text.getBytes(UTF8), key);
 		encryptedText = encodeBASE64(cipherText);
 		return encryptedText;
 	}
 
-	public static String sign(String text, PrivateKey key) throws Exception {
-		Signature sig = Signature.getInstance(SIGNATUER_ALGORITHM);
+	public String sign(String text, PrivateKey key) throws Exception {
+		Signature sig = Signature.getInstance(signatureAlgorithm);
 		sig.initSign(key);
 		sig.update(text.getBytes(UTF8));
 		byte[] signatureBytes = sig.sign();
@@ -87,35 +94,35 @@ public class RSA {
 	}
 
 
-	public static boolean verifySignature(String signedText, String actualText, PublicKey key) throws Exception {
-		Signature sig = Signature.getInstance(SIGNATUER_ALGORITHM);
+	public boolean verifySignature(String signedText, String actualText, PublicKey key) throws Exception {
+		Signature sig = Signature.getInstance(signatureAlgorithm);
 		byte[] signatureBytes = Base64.getDecoder().decode(signedText);
 		sig.initVerify(key);
 		sig.update(actualText.getBytes(UTF8));
 		return sig.verify(signatureBytes);
 	}
 
-	private static byte[] decrypt(byte[] text, PrivateKey key) throws Exception {
+	private byte[] decrypt(byte[] text, PrivateKey key) throws Exception {
 		byte[] decrypted;
-		Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+		Cipher cipher = Cipher.getInstance(rsaCipher);
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		decrypted = cipher.doFinal(text);
 		return decrypted;
 	}
 
-	public static String decrypt(String text, PrivateKey key) throws Exception {
+	public String decrypt(String text, PrivateKey key) throws Exception {
 		String result;
 		byte[] decryptedText = decrypt(decodeBASE64(text), key);
 		result = new String(decryptedText, UTF8);
 		return result;
 	}
 
-	public static String getKeyAsString(Key key) {
+	public String getKeyAsString(Key key) {
 		byte[] keyBytes = key.getEncoded();
 		return encodeBASE64(keyBytes);
 	}
 
-	public static PrivateKey getPrivateKeyFromString(String key) throws Exception {
+	public PrivateKey getPrivateKeyFromString(String key) throws Exception {
 		KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
 		EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(decodeBASE64(key));
 		return keyFactory.generatePrivate(privateKeySpec);
@@ -136,9 +143,9 @@ public class RSA {
 	}
 
 
-	public static String prettyFingerPrint(PublicKey publicKey) throws NoSuchAlgorithmException {
+	public String prettyFingerPrint(PublicKey publicKey) throws NoSuchAlgorithmException {
 		byte[] bytesOfMessage = publicKey.getEncoded();
-		MessageDigest md = MessageDigest.getInstance(FINGERPRINT_HASH_ALGORITHM);
+		MessageDigest md = MessageDigest.getInstance(fingerprintHashAlgorithm);
 		byte[] arr = md.digest(bytesOfMessage);
 		final StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < arr.length; i++) {

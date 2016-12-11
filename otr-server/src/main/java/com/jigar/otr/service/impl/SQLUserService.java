@@ -16,6 +16,7 @@
 
 package com.jigar.otr.service.impl;
 
+import com.lithium.flow.config.Config;
 import com.lithium.flow.util.Logs;
 
 import java.security.PublicKey;
@@ -43,11 +44,13 @@ import com.jigar.otr.util.Validations;
 public class SQLUserService implements UserService {
 
 	private final Database databasePool;
+	private final RSA rsa;
 
 	private static final Logger log = Logs.getLogger();
 
-	public SQLUserService(Database databasePool) {
+	public SQLUserService(Database databasePool, Config config) {
 		this.databasePool = databasePool;
+		this.rsa = new RSA(config);
 	}
 
 
@@ -125,7 +128,7 @@ public class SQLUserService implements UserService {
 			}
 			// verify authenticity with signature
 			PublicKey clientPublicIdKey = RSA.getPublicKeyFromString(publicIdKeyStr);
-			if (!RSA.verifySignature(signedLogin, login, clientPublicIdKey)) {
+			if (!rsa.verifySignature(signedLogin, login, clientPublicIdKey)) {
 				log.error("User failed to login, signature mismatch");
 				throw new UserException("Login Failed: Signature mismatch");
 			}
