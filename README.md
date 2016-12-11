@@ -1,6 +1,6 @@
 # OTR [ off the record ]
 
-Provides framework / prototype for end-to-end encryption and perfect forward secrecy in Java
+Provides framework / prototype for end-to-end encryption with perfect forward secrecy in Java
 
 Protocol combines symmetric and asymmetric encryption algorithms [RSA, Elliptic curve Diffie–Hellman, AES] to implement end-to-end encryption, It works on top of https
 
