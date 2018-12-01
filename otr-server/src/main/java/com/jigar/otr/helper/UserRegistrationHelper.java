@@ -16,10 +16,19 @@
 
 package com.jigar.otr.helper;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+
 /**
  * Created by jigar.joshi on 11/29/16.
  */
-public class UserRegistrationHelper {
+@XmlRootElement
+public class UserRegistrationHelper
+{
+	public UserRegistrationHelper()
+	{
+
+	}
 
 	private int userId;
 

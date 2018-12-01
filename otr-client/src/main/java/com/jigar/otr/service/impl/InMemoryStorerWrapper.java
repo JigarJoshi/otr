@@ -16,8 +16,11 @@
 
 package com.jigar.otr.service.impl;
 
+import com.google.gson.JsonObject;
 import com.jigar.otr.service.Storer;
 import com.jigar.otr.service.StorerWrapper;
+
+import java.util.Map;
 
 /**
  * Created by jigar.joshi on 11/28/16.
@@ -43,6 +46,11 @@ public class InMemoryStorerWrapper implements StorerWrapper {
 	}
 
 	@Override
+	public String getUsername() {
+		return storer.get(Storer.NameSpace.USER, "user").get("userName").getAsString();
+	}
+
+	@Override
 	public String getPrivateIdKey() {
 		return storer.get(Storer.NameSpace.ID_KEYS, Storer.ID_KEY).get("private").getAsString();
 	}
@@ -56,5 +64,12 @@ public class InMemoryStorerWrapper implements StorerWrapper {
 	@Override
 	public String getPrivatePreKey(String publicPreKey) {
 		return storer.get(Storer.NameSpace.PRE_KEYS, publicPreKey).get("private").getAsString();
+	}
+
+	public boolean loadUser(Map<Storer.NameSpace, Map<String, JsonObject>> newUser){
+		if (storer instanceof InMemoryStorer){
+			return  ((InMemoryStorer) storer).set(newUser);
+		}
+		return false;
 	}
 }

@@ -38,29 +38,37 @@ public class OTRClientDemoMain {
 
 	private static void apiTest() throws Exception {
 		OTRClient client = OTRClient.get(Main.config());
-		String user = Main.config().getString("user");
-		int target = Main.config().getInt("target");
+		// String user = Main.config().getString("user");
 		while (true) {
 			Scanner scanner = new Scanner(System.in);
 			log.info("1. register");
 			log.info("2. login");
 			log.info("3. sendMessage");
 			log.info("4. readMessage");
-			log.info("5. exit");
+			log.info("5. list Users");
+			log.info("6. logout");
+			log.info("7. exit");
 
 			String command = scanner.nextLine();
+			String user = "";
 			switch (command) {
 				case "1":
+					log.info("enter user: ");
+					user = scanner.nextLine();
 					log.info("enter password: ");
 					String password = scanner.nextLine();
 					client.register(user, password);
 					break;
 				case "2":
+					log.info("enter user: ");
+					user = scanner.nextLine();
 					log.info("enter password: ");
 					password = scanner.nextLine();
 					client.login(user, password);
 					break;
 				case "3":
+					log.info("Enter target: ");
+					int target = Integer.valueOf(scanner.nextLine());
 					log.info("Enter message: ");
 					String message = scanner.nextLine();
 					client.sendMessage("From " + user + ", message = " + message, target);
@@ -69,6 +77,12 @@ public class OTRClientDemoMain {
 					client.readMessages();
 					break;
 				case "5":
+					client.listUsers();
+					break;
+				case "6":
+					client.logout();
+					break;
+				case "7":
 					System.exit(0);
 				default:
 					log.error("invalid choice");

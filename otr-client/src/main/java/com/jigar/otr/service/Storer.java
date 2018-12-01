@@ -42,7 +42,6 @@ public interface Storer {
 
 	void remove(NameSpace namespace);
 
-
 	static Storer get(Config config) {
 		String storerType = config.getString("storer.type", "memory");
 		switch (storerType) {

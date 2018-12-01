@@ -25,7 +25,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
@@ -53,10 +55,37 @@ public class SQLUserService implements UserService {
 		this.rsa = new RSA(config);
 	}
 
+	@Override
+	public String listUsers() throws UserException{
+
+		Connection connection = null;
+		PreparedStatement userPreparedStatement;
+		String users;
+		try
+		{
+			users = "";
+			connection = databasePool.getConnection();
+			userPreparedStatement = connection.prepareStatement("SELECT id, login FROM USERS");
+			ResultSet resultSet = userPreparedStatement.executeQuery();
+			while(resultSet.next()){
+				users += resultSet.getInt(1) + "," + resultSet.getString(2) + "\n";
+			}
+		}
+		catch (Exception ex) {
+		log.error("Failed to list users", ex);
+		throw new UserException("Failed to list users" + ex.getMessage());
+		}
+		finally {
+			Utils.closeQuietly(connection);
+		}
+		return users;
+	}
+
 
 	@Override
 	public int registerUser(@NotNull String login, @NotNull String password, @NotNull String clientPublicKey,
 			@NotNull List<String> preKeys) throws UserException {
+		System.out.println("Hi from register user");
 		Validations.validatePassword(password);
 		Validations.validateLogin(login);
 

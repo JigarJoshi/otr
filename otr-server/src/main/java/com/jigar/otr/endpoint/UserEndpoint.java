@@ -16,15 +16,16 @@
 
 package com.jigar.otr.endpoint;
 
+import com.jigar.otr.helper.UserList;
 import com.lithium.flow.util.Logs;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -46,15 +47,18 @@ public class UserEndpoint {
 
 	@POST
 	@Path("/register")
+	//@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response register(@FormParam("login") @Nullable String login, @FormParam("password") @Nullable String password,
 			@FormParam("identityPublicKey") @Nullable String identityPublicKey,
 			@FormParam("prePublicKeys") @Nullable List<String> prePublicKeys) {
 		log.info("login = {}, identityPublicKey = {}, sizeOfPreKeys = {}", login, identityPublicKey, prePublicKeys.size());
 		try {
 			int userId = userService.registerUser(login, password, identityPublicKey, prePublicKeys);
-			return Response.status(201).type(MediaType.APPLICATION_JSON_TYPE)
+			return Response.status(201)
 					.entity(new UserRegistrationHelper(userId)).build();
 		} catch (Exception ex) {
+			System.out.println("Exception: " + ex.getMessage());
 			return Response.status(503).entity(new Ack("failed to register user: " + ex.getMessage(),
 					Utils.FAIL_CODE)).build();
 		}
@@ -71,6 +75,21 @@ public class UserEndpoint {
 		} catch (Exception ex) {
 			log.error("Failed to login", ex);
 			return Response.status(403).build();
+		}
+	}
+
+	@GET
+	@Path("/list")
+	public Response list() {
+		try {
+			// list userService
+			String userList = userService.listUsers();
+			return Response.status(200)
+					.entity(new UserList(userList)).build();
+		} catch (Exception ex) {
+			System.out.println("Exception: " + ex.getMessage());
+			return Response.status(503).entity(new Ack("failed to register user: " + ex.getMessage(),
+			                                           Utils.FAIL_CODE)).build();
 		}
 	}
 

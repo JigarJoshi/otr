@@ -26,6 +26,7 @@ import com.jigar.otr.service.impl.InMemoryStorerWrapper;
 public interface StorerWrapper {
 
 	int getUserId();
+	String getUsername();
 
 	String getPrivateIdKey();
 
