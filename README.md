@@ -9,7 +9,7 @@ Dependencies are managed using [Maven](https://maven.apache.org/guides/getting-s
 
 The framework uses Bouncy Castle as provider for encryption. The dependency has to be excluded from the *fat* jar because of signature verification problems.
 
-From the following source, [](http://tomee.apache.org/bouncy-castle.html) bouncy castle is easily installed in two steps:
+From the source: [tomee.apache](http://tomee.apache.org/bouncy-castle.html), bouncy castle is easily installed in two steps:
 1. Add the Bouncy Castle provider jar to the $JAVA_HOME/jre/lib/ext directory
 2. Create a Bouncy Castle provider entry in the $JAVA_HOME/jre/lib/security/java.security file
 
@@ -66,8 +66,6 @@ User2
 - Send a message to user2 using the id identified by the list user's call, logout.
 - Login to user2, receive the message.
 
-
-
 ## API
 ### Keys
 
@@ -94,7 +92,7 @@ Current implementation uses 256 bit AES Encryption.
 
 #### Logout [TODO Encrypt Stored Information]
 
- - User writes all key related information to the file "<username>-otr.json" in the directory defined by the "user.keystore" configuration variable. The user's information is then cleared from memory. The information is stored as plaintext.
+ - User writes all key related information to the file "username-otr.json" in the directory defined by the "user.keystore" configuration variable. The user's information is then cleared from memory. The information is stored as plaintext.
  
 #### List Users
 
