@@ -38,6 +38,9 @@ public class DatabaseServiceImpl implements Database {
 		dataSource.setUsername(config.getString("sql.user"));
 		dataSource.setPassword(config.getString("sql.password"));
 		dataSource.setMaxActive(config.getInt("sql.max_connection", 100));
+		dataSource.setMaxIdle(5);
+		dataSource.setInitialSize(5);
+		dataSource.setValidationQuery("SELECT 1");
 	}
 
 	@Override

@@ -21,6 +21,8 @@ import com.lithium.flow.config.Config;
 import com.jigar.otr.exception.OTRException;
 import com.jigar.otr.service.impl.OTRRestClient;
 
+import java.util.Map;
+
 /**
  * Created by jigar.joshi on 11/21/16.
  */
@@ -31,6 +33,8 @@ public interface OTRClient {
 
 	void login(String login, String password) throws OTRException;
 
+	void logout() throws OTRException;
+
 	void refreshMessageKeys() throws OTRException;
 
 	void readMessages();
@@ -40,6 +44,8 @@ public interface OTRClient {
 	String getPublicIdKey(int userId) throws OTRException;
 
 	String getPrePublicKey(int userId) throws OTRException;
+
+	String listUsers() throws OTRException;
 
 	static OTRClient get(Config config) {
 		String clientType = config.getString("otr.client", "rest");

@@ -15,17 +15,32 @@
  */
 package com.jigar.otr.service.impl;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.lithium.flow.config.Config;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +60,8 @@ import com.jigar.otr.service.KeyService;
 import com.jigar.otr.service.OTRClient;
 import com.jigar.otr.service.Storer;
 import com.jigar.otr.service.StorerWrapper;
+
+import javax.naming.Name;
 
 /**
  * Created by jigar.joshi on 11/21/16.
@@ -123,12 +140,18 @@ public class OTRRestClient implements OTRClient {
 			throw new OTRException("Failed to process registration on server, server responded with status code: "
 					+ response.getStatusCode());
 		}
-		storeUser(response);
+		storeUser(response, login);
 	}
 
 	@Override
 	public void login(String login, String password) throws OTRException {
 		String signedLogin;
+		if(!loadUser(login))
+		{
+			// No users present on the current instance.
+			// You need a keypair to even login.
+			return;
+		}
 		try {
 			PrivateKey privateKey = rsa.getPrivateKeyFromString(storerWrapper.getPrivateIdKey());
 			signedLogin = rsa.sign(login, privateKey);
@@ -144,10 +167,63 @@ public class OTRRestClient implements OTRClient {
 		int statusCode = response.getStatusCode();
 		if (statusCode == HttpURLConnection.HTTP_OK) {
 			log.info("logged in");
-			storeUser(response);
+			storeUser(response, login);
 		} else {
 			throw new OTRException("Failed to login, status code received : " + statusCode);
 		}
+	}
+
+	@Override
+	public void logout() throws OTRException
+	{
+		try
+		{
+			String username  = storerWrapper.getUsername();
+			String keystore = config.getString("user.keystore", "./");
+			File dirs = new File(keystore);
+			if(!dirs.exists()){
+				dirs.mkdirs();
+			}
+
+			FileWriter fw = new FileWriter(keystore + username + "-otr.json");
+			fw.write(storer.toString());
+			fw.flush();
+			fw.close();
+
+			String json = new String(Files.readAllBytes(Paths.get(keystore + username + "-otr.json")));
+			Type mapType = new TypeToken<Map<Storer.NameSpace, Map<String, JsonObject>>>(){}.getType();
+
+			Map<Storer.NameSpace, Map<String, JsonObject>> map = new GsonBuilder().disableHtmlEscaping().create()
+					.fromJson(json, mapType);
+		} catch (IOException e)
+		{
+			log.info("Failed to logout");
+		}
+	}
+
+	private boolean loadUser(String username)
+	{
+		try
+		{
+			String keystore = config.getString("user.keystore", "./");
+			File dirs = new File(keystore);
+			if(!dirs.exists()){
+				dirs.mkdirs();
+			}
+			String json = new String(Files.readAllBytes(Paths.get(keystore + username + "-otr.json")));
+			Type mapType = new TypeToken<Map<Storer.NameSpace, Map<String, JsonObject>>>(){}.getType();
+			Map<Storer.NameSpace, Map<String, JsonObject>> map = new GsonBuilder().disableHtmlEscaping().create()
+					.fromJson(json, mapType);
+			if(storerWrapper instanceof InMemoryStorerWrapper)
+			{
+				((InMemoryStorerWrapper) storerWrapper).loadUser(map);
+				return true;
+			}
+		} catch (IOException e)
+		{
+			log.info("Failed to load the user: " + username + "\nHas this user been registered?");
+		}
+		return false;
 	}
 
 	@Override
@@ -276,6 +352,7 @@ public class OTRRestClient implements OTRClient {
 		}
 	}
 
+	@Override
 	public String getPublicIdKey(int userId) throws OTRException {
 		try {
 			return webb.post("/api/crypto/public-key")
@@ -285,6 +362,7 @@ public class OTRRestClient implements OTRClient {
 		}
 	}
 
+	@Override
 	public String getPrePublicKey(int userId) throws OTRException {
 		try {
 			return webb.post("/api/crypto/pre-public-key")
@@ -294,16 +372,38 @@ public class OTRRestClient implements OTRClient {
 		}
 	}
 
+	@Override
+	public String listUsers() throws OTRException
+	{
+		Response<JSONObject> response = webb.get("/api/user/list").asJsonObject();
+		int statusCode = response.getStatusCode();
+		String userList = "";
+		if (statusCode == HttpURLConnection.HTTP_OK) {
+			try
+			{
+				userList = response.getBody().getString("userList");
+				log.info("Users list grabbed {}", "\n" + userList);
+			} catch (JSONException e)
+			{
+				e.printStackTrace();
+			}
+		} else {
+			throw new OTRException("Failed to list users, status code received : " + statusCode);
+		}
+		return userList;
+	}
 
-	private void storeUser(Response<JSONObject> response) throws OTRException {
+	private void storeUser(Response<JSONObject> response, String loginName) throws OTRException {
 		JsonObject user = new JsonObject();
 		try {
 			String userId = response.getBody().getString("userId");
 			log.info("registered userId = {}", userId);
 			user.addProperty("userId", userId);
+			user.addProperty("userName", loginName);
 		} catch (JSONException jsonException) {
 			throw new OTRException("Failed to read registered userId: " + jsonException.getMessage(), jsonException);
 		}
 		storer.put(Storer.NameSpace.USER, Storer.USER_KEY, user);
 	}
+
 }

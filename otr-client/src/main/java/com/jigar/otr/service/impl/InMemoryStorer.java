@@ -19,6 +19,7 @@ package com.jigar.otr.service.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.jigar.otr.service.Storer;
 
@@ -75,5 +76,20 @@ public class InMemoryStorer implements Storer {
 	@Override
 	public void remove(NameSpace namespace) {
 		map.remove(namespace);
+	}
+
+	@Override
+	public String toString()
+	{
+		return new GsonBuilder().disableHtmlEscaping().create().toJson(map);
+	}
+
+	public boolean set(Map<NameSpace, Map<String, JsonObject>> newUser){
+		map.clear();
+		for (NameSpace space: newUser.keySet())
+		{
+			map.put(space, newUser.get(space));
+		}
+		return false;
 	}
 }

@@ -17,6 +17,7 @@
 package com.jigar.otr.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.jigar.otr.exception.UserException;
 
@@ -29,4 +30,6 @@ public interface UserService {
 			List<String> preKeys) throws UserException;
 
 	int login(String login, String password, String clientPublicKey) throws UserException;
+
+	String listUsers() throws UserException;
 }

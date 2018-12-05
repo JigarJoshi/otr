@@ -22,6 +22,7 @@ package com.jigar.otr;
 import com.lithium.flow.config.Config;
 import com.lithium.flow.util.Main;
 
+import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +39,7 @@ import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -60,6 +62,7 @@ public class OTRServerMain {
 
 	public OTRServerMain(Config config) throws Exception {
 		Database db = new DatabaseServiceImpl(config);
+
 		MessageService messageService = new MessageServiceImpl(db);
 		CryptoService cryptoService = new CryptoServiceImpl(db);
 		UserService userService = new SQLUserService(db, config);
@@ -85,6 +88,7 @@ public class OTRServerMain {
 				bind(cryptoService).to(CryptoService.class);
 			}
 		});
+		resourceConfig.register(JacksonFeature.class);
 
 		ServletHolder jersey = new ServletHolder(new ServletContainer(resourceConfig));
 		SessionHandler sh = new SessionHandler(); // org.eclipse.jetty.server.session.SessionHandler
