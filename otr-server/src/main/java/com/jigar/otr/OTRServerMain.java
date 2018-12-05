@@ -61,7 +61,6 @@ import com.jigar.otr.service.impl.SQLUserService;
 public class OTRServerMain {
 
 	public OTRServerMain(Config config) throws Exception {
-		System.out.println(config.getString("sql.host"));
 		Database db = new DatabaseServiceImpl(config);
 
 		MessageService messageService = new MessageServiceImpl(db);
@@ -117,7 +116,6 @@ public class OTRServerMain {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(System.getProperty("config"));
 		Main.run();
 	}
 }

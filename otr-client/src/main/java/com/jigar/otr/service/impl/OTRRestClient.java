@@ -87,7 +87,6 @@ public class OTRRestClient implements OTRClient {
 		CookieHandler.setDefault(cookieManager);
 
 		this.webb.setBaseUri(serverUrl);
-		// webb.setDefaultHeader(Webb.HDR_CONTENT_TYPE, "application/json");
 		this.ecdh = new ECDH(config);
 		this.rsa = new RSA(config);
 		this.keyService = KeyService.get(config);
@@ -177,11 +176,9 @@ public class OTRRestClient implements OTRClient {
 	@Override
 	public void logout() throws OTRException
 	{
-		System.out.println("Loging out!");
-		String username  = storerWrapper.getUsername();
-
 		try
 		{
+			String username  = storerWrapper.getUsername();
 			String keystore = config.getString("user.keystore", "./");
 			File dirs = new File(keystore);
 			if(!dirs.exists()){
@@ -198,11 +195,9 @@ public class OTRRestClient implements OTRClient {
 
 			Map<Storer.NameSpace, Map<String, JsonObject>> map = new GsonBuilder().disableHtmlEscaping().create()
 					.fromJson(json, mapType);
-
-			System.out.println(map.toString());
 		} catch (IOException e)
 		{
-			e.printStackTrace();
+			log.info("Failed to logout");
 		}
 	}
 
@@ -226,7 +221,7 @@ public class OTRRestClient implements OTRClient {
 			}
 		} catch (IOException e)
 		{
-			e.printStackTrace();
+			log.info("Failed to load the user: " + username + "\nHas this user been registered?");
 		}
 		return false;
 	}

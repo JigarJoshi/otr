@@ -102,21 +102,6 @@
 	</dependencies>
 	<build>
 		<plugins>
-            <plugin>
-                <groupId>de.ntcomputer</groupId>
-                <artifactId>executable-packer-maven-plugin</artifactId>
-                <version>1.0.1</version>
-                <configuration>
-                    <mainClass>com.jigar.otr.OTRServerMain</mainClass>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>pack-executable-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -157,27 +142,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- <plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>com.jigar.otr.OTRServerMain</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin> -->
 		</plugins>
 	</build>
 </project>

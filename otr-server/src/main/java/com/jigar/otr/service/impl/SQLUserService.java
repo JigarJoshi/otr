@@ -57,7 +57,6 @@ public class SQLUserService implements UserService {
 
 	@Override
 	public String listUsers() throws UserException{
-
 		Connection connection = null;
 		PreparedStatement userPreparedStatement;
 		String users;
@@ -68,7 +67,7 @@ public class SQLUserService implements UserService {
 			userPreparedStatement = connection.prepareStatement("SELECT id, login FROM USERS");
 			ResultSet resultSet = userPreparedStatement.executeQuery();
 			while(resultSet.next()){
-				users += resultSet.getInt(1) + "," + resultSet.getString(2) + "\n";
+				users += resultSet.getInt(1) + "," + resultSet.getString(2) + ";";
 			}
 		}
 		catch (Exception ex) {
@@ -85,7 +84,6 @@ public class SQLUserService implements UserService {
 	@Override
 	public int registerUser(@NotNull String login, @NotNull String password, @NotNull String clientPublicKey,
 			@NotNull List<String> preKeys) throws UserException {
-		System.out.println("Hi from register user");
 		Validations.validatePassword(password);
 		Validations.validateLogin(login);
 

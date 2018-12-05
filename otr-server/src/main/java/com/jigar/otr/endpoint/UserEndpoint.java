@@ -58,7 +58,6 @@ public class UserEndpoint {
 			return Response.status(201)
 					.entity(new UserRegistrationHelper(userId)).build();
 		} catch (Exception ex) {
-			System.out.println("Exception: " + ex.getMessage());
 			return Response.status(503).entity(new Ack("failed to register user: " + ex.getMessage(),
 					Utils.FAIL_CODE)).build();
 		}
@@ -87,8 +86,7 @@ public class UserEndpoint {
 			return Response.status(200)
 					.entity(new UserList(userList)).build();
 		} catch (Exception ex) {
-			System.out.println("Exception: " + ex.getMessage());
-			return Response.status(503).entity(new Ack("failed to register user: " + ex.getMessage(),
+			return Response.status(503).entity(new Ack("failed to list users: " + ex.getMessage(),
 			                                           Utils.FAIL_CODE)).build();
 		}
 	}

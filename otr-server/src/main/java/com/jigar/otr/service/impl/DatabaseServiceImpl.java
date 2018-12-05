@@ -34,7 +34,6 @@ public class DatabaseServiceImpl implements Database {
 
 	public DatabaseServiceImpl(Config config) {
 		this.dataSource = new BasicDataSource();
-		System.out.println(config.getString("sql.host"));
 		dataSource.setUrl("jdbc:mysql://" + config.getString("sql.host") + "/" + config.getString("sql.database"));
 		dataSource.setUsername(config.getString("sql.user"));
 		dataSource.setPassword(config.getString("sql.password"));

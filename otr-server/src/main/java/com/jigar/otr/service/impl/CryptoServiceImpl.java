@@ -113,15 +113,12 @@ public class CryptoServiceImpl implements CryptoService {
 			preparedStatement = connection.prepareStatement("DELETE FROM PRE_KEYS WHERE ID = ?");
 			preparedStatement.setInt(1, id);
 			result = preparedStatement.executeUpdate();
-			// resultSet.next();
-			// result = resultSet.getInt(1);
 			log.debug("deleted pre_key, id={}", result);
 		} catch (SQLException sqlException) {
 			log.error("Failed to execute count query ", sqlException);
 		} finally {
 			Utils.closeQuietly(connection);
 			Utils.closeQuietly(preparedStatement);
-			// Utils.closeQuietly(resultSet);
 		}
 	}
 
